@@ -1,0 +1,8 @@
+[functions.transcribe-call]
+verify_jwt = false
+
+[functions.realtime-relay]
+verify_jwt = false
+
+[functions.call-drafts]
+verify_jwt = false

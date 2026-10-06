@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-ink-50 font-sans text-[15px] leading-normal text-ink-900;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display leading-tight tracking-tight;
+  }
+  h1 {
+    @apply font-bold;
+  }
+  * {
+    @apply border-ink-200;
+  }
+  ::selection {
+    @apply bg-brand-200 text-ink-950;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-ink-200 bg-white shadow-card;
+  }
+  .btn {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:pointer-events-none disabled:opacity-50 select-none;
+  }
+  .btn-primary {
+    @apply btn bg-brand-700 text-white hover:bg-brand-800 active:bg-brand-900;
+  }
+  .btn-secondary {
+    @apply btn bg-ink-950 text-white hover:bg-ink-800;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-600 hover:bg-ink-100 hover:text-ink-950;
+  }
+  .btn-outline {
+    @apply btn border border-ink-200 bg-white text-ink-800 hover:border-ink-300 hover:bg-ink-50;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white hover:bg-rose-700;
+  }
+  .field {
+    @apply w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 transition focus:border-brand-600 focus:shadow-ring focus:outline-none;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold text-ink-700;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold;
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-500;
+  }
+  .page-title {
+    @apply font-display text-[28px] font-bold leading-tight tracking-tight text-ink-950;
+  }
+  .page-sub {
+    @apply mt-2 max-w-2xl text-sm leading-relaxed text-ink-500;
+  }
+}
