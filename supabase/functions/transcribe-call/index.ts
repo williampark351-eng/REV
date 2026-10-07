@@ -4,11 +4,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
 };
 
-const MAX_BYTES = 25 * 1024 * 1024;
+const MAX_INLINE_BYTES = 7 * 1024 * 1024;
 const HOSTS = [
   'https://maas.qwencloudapi.com/compatible-mode/v1',
   'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
 ];
+const MIME_BY_FORMAT: Record<string, string> = {
+  wav: 'audio/wav',
+  mp3: 'audio/mpeg',
+  m4a: 'audio/mp4',
+  ogg: 'audio/ogg',
+  webm: 'audio/webm',
+};
 const allowedTypes = new Set(['audio/webm', 'audio/wav', 'audio/wave', 'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/x-m4a']);
 
 function response(body: unknown, status = 200): Response {
@@ -28,11 +35,32 @@ function base64(bytes: Uint8Array): string {
 }
 
 function formatForModel(type: string, filename: string): string {
-  if (type.includes('wav') || filename.toLowerCase().endsWith('.wav')) return 'wav';
-  if (type.includes('mpeg') || filename.toLowerCase().endsWith('.mp3')) return 'mp3';
-  if (type.includes('mp4') || type.includes('m4a') || filename.toLowerCase().endsWith('.m4a')) return 'm4a';
-  if (type.includes('ogg')) return 'ogg';
+  const name = filename.toLowerCase();
+  if (type.includes('wav') || name.endsWith('.wav')) return 'wav';
+  if (type.includes('mpeg') || name.endsWith('.mp3')) return 'mp3';
+  if (type.includes('mp4') || type.includes('m4a') || name.endsWith('.m4a') || name.endsWith('.mp4')) return 'm4a';
+  if (type.includes('ogg') || name.endsWith('.ogg')) return 'ogg';
   return 'webm';
+}
+
+async function audioSource(req: Request): Promise<string | Response> {
+  if ((req.headers.get('content-type') ?? '').includes('application/json')) {
+    const { audio_url } = await req.json().catch(() => ({}));
+    const prefix = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/call-recordings/`;
+    if (typeof audio_url !== 'string' || !audio_url.startsWith(prefix) || audio_url.includes('..')) {
+      return response({ error: 'That recording link is not valid.' }, 400);
+    }
+    return audio_url;
+  }
+  const form = await req.formData();
+  const audio = form.get('audio');
+  if (!(audio instanceof File)) return response({ error: 'Choose an audio recording first.' }, 400);
+  const baseType = audio.type.split(';')[0].trim().toLowerCase();
+  if (baseType && !allowedTypes.has(baseType)) return response({ error: 'Use a webm, wav, mp3, m4a, or ogg recording.' }, 415);
+  if (audio.size > MAX_INLINE_BYTES) return response({ error: 'This audio segment is too large to transcribe directly.' }, 413);
+  const format = formatForModel(baseType, audio.name);
+  const bytes = new Uint8Array(await audio.arrayBuffer());
+  return `data:${MIME_BY_FORMAT[format]};base64,${base64(bytes)}`;
 }
 
 Deno.serve(async (req: Request) => {
@@ -43,22 +71,15 @@ Deno.serve(async (req: Request) => {
     const apiKey = Deno.env.get('DASHSCOPE_API_KEY')?.trim();
     if (!apiKey) return response({ error: 'Transcription is not configured yet.' }, 503);
 
-    const form = await req.formData();
-    const audio = form.get('audio');
-    if (!(audio instanceof File)) return response({ error: 'Choose an audio recording first.' }, 400);
-    if (audio.size > MAX_BYTES) return response({ error: 'Audio must be no larger than 25 MB.' }, 413);
-    if (audio.type && !allowedTypes.has(audio.type)) return response({ error: 'Use a webm, wav, mp3, m4a, or ogg recording.' }, 415);
-
-    const bytes = new Uint8Array(await audio.arrayBuffer());
+    const source = await audioSource(req);
+    if (source instanceof Response) return source;
     const requestBody = JSON.stringify({
       model: 'qwen3-asr-flash',
       messages: [{
         role: 'user',
-        content: [{
-          type: 'input_audio',
-          input_audio: { data: base64(bytes), format: formatForModel(audio.type, audio.name) },
-        }],
+        content: [{ type: 'input_audio', input_audio: { data: source } }],
       }],
+      stream: false,
     });
 
     let payload: unknown = null;

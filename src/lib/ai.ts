@@ -20,6 +20,16 @@ export async function transcribeAudio(audio: Blob, name: string): Promise<string
   return data.transcript;
 }
 
+export async function transcribeRecordingUrl(audioUrl: string): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('transcribe-call', { body: { audio_url: audioUrl } });
+  if (error) {
+    const detail = await error.context?.json?.().catch(() => null);
+    throw new Error(detail?.error ?? 'The transcription service is unavailable right now.');
+  }
+  if (!data || typeof data.transcript !== 'string') throw new Error('No transcript was returned.');
+  return data.transcript;
+}
+
 export async function draftCall(transcript: string, context: string): Promise<CallDrafts> {
   const { data, error } = await supabase.functions.invoke('call-drafts', { body: { transcript, context } });
   if (error) {
@@ -32,10 +42,18 @@ export async function draftCall(transcript: string, context: string): Promise<Ca
   return data as CallDrafts;
 }
 
+function recordingType(audio: Blob): { ext: string; contentType: string } {
+  const type = audio.type.split(';')[0].toLowerCase();
+  if (type.includes('wav')) return { ext: 'wav', contentType: 'audio/wav' };
+  if (type.includes('mpeg') || type.includes('mp3')) return { ext: 'mp3', contentType: 'audio/mpeg' };
+  if (type.includes('mp4') || type.includes('m4a')) return { ext: 'm4a', contentType: 'audio/mp4' };
+  if (type.includes('ogg')) return { ext: 'ogg', contentType: 'audio/ogg' };
+  return { ext: 'webm', contentType: 'audio/webm' };
+}
+
 export async function uploadRecording(studentId: string, callId: string, audio: Blob): Promise<string> {
-  const ext = audio.type.includes('mp4') ? 'm4a' : audio.type.includes('ogg') ? 'ogg' : 'webm';
+  const { ext, contentType } = recordingType(audio);
   const path = `${studentId}/${callId}/${crypto.randomUUID()}.${ext}`;
-  const contentType = audio.type.split(';')[0] || 'audio/webm';
   const { error } = await supabase.storage.from('call-recordings').upload(path, audio, { contentType });
   if (error) throw new Error('The recording could not be uploaded.');
   return supabase.storage.from('call-recordings').getPublicUrl(path).data.publicUrl;

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ArrowLeft, ChevronRight, FileAudio, Loader2, Search, Upload } from 'lucide-react';
 import { useData } from '@/state/DataContext';
-import { transcribeAudio, uploadRecording } from '@/lib/ai';
+import { transcribeRecordingUrl, uploadRecording } from '@/lib/ai';
 import { formatDateTimeShort, isUpcoming } from '@/lib/format';
 import type { Call } from '@/lib/types';
 import { LiveSession } from '@/components/studio/LiveSession';
@@ -212,8 +212,10 @@ function Library({
     }
     setBusyId(call.id);
     try {
-      const [url, text] = await Promise.all([uploadRecording(call.student_id, call.id, file), transcribeAudio(file, file.name)]);
-      await updateCall(call.id, { recording_url: url, raw_notes: text });
+      const url = await uploadRecording(call.student_id, call.id, file);
+      await updateCall(call.id, { recording_url: url });
+      const text = await transcribeRecordingUrl(url);
+      await updateCall(call.id, { raw_notes: text });
       onOpen({ ...call, recording_url: url, raw_notes: text });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Upload failed.');
