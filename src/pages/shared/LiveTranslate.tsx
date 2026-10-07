@@ -74,8 +74,12 @@ export function LiveTranslate({ audience }: { audience: 'coach' | 'student' }) {
   const live = rt.status === 'live';
   const busy = rt.status === 'connecting' || rt.status === 'ending';
 
-  useEffect(() => srcEnd.current?.scrollIntoView({ block: 'nearest' }), [source]);
-  useEffect(() => outEnd.current?.scrollIntoView({ block: 'nearest' }), [output]);
+  useEffect(() => {
+    srcEnd.current?.scrollIntoView({ block: 'nearest' });
+  }, [source]);
+  useEffect(() => {
+    outEnd.current?.scrollIntoView({ block: 'nearest' });
+  }, [output]);
 
   const start = async () => {
     setMicError(null);

@@ -81,7 +81,9 @@ export function AITraining({ audience }: { audience: 'coach' | 'student' }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live]);
 
-  useEffect(() => endRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), [lines]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [lines]);
 
   const connect = async (topic?: string) => {
     setMicError(null);
