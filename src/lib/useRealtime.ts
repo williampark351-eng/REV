@@ -38,7 +38,7 @@ export function useRealtime(mode: RealtimeMode, onEvent: (event: RealtimeEvent) 
     setLevel(0);
   }, []);
 
-  useEffect(() => teardown, [teardown]);
+  useEffect(() => () => teardown(), [teardown]);
 
   const start = useCallback(
     (session: Record<string, unknown>, stream: MediaStream, release: () => void, playAudio: boolean) => {
