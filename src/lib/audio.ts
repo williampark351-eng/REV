@@ -63,12 +63,14 @@ export async function streamPcm16(
   source.connect(node);
   const silent = context.createGain();
   silent.gain.value = 0;
-  node.connect(silent).connect(context.destination);
+  node.connect(silent);
+  silent.connect(context.destination);
   return {
     stop: () => {
       node.port.onmessage = null;
-      source.disconnect();
-      node.disconnect();
+      try { source.disconnect(); } catch { /* already disconnected */ }
+      try { node.disconnect(); } catch { /* already disconnected */ }
+      try { silent.disconnect(); } catch { /* already disconnected */ }
       void context.close();
     },
   };
@@ -77,18 +79,25 @@ export async function streamPcm16(
 export class PcmPlayer {
   private context = new AudioContext();
   private nextTime = 0;
-  private sources = new Set<AudioBufferSourceNode>();
+  private sources = new Map<AudioScheduledSourceNode, number>();
 
   constructor() {
     if (this.context.state === 'suspended') void this.context.resume();
   }
 
   play(base64: string) {
-    const binary = atob(base64);
-    const samples = new Int16Array(binary.length / 2);
-    for (let i = 0; i < samples.length; i++) {
-      samples[i] = binary.charCodeAt(i * 2) | (binary.charCodeAt(i * 2 + 1) << 8);
+    if (this.context.state === 'suspended') void this.context.resume();
+    let samples: Int16Array;
+    try {
+      const binary = atob(base64);
+      samples = new Int16Array(binary.length / 2);
+      for (let i = 0; i < samples.length; i++) {
+        samples[i] = binary.charCodeAt(i * 2) | (binary.charCodeAt(i * 2 + 1) << 8);
+      }
+    } catch {
+      return;
     }
+    if (samples.length === 0) return;
     const buffer = this.context.createBuffer(1, samples.length, 24000);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < samples.length; i++) data[i] = samples[i] / 0x8000;
@@ -98,16 +107,22 @@ export class PcmPlayer {
     const start = Math.max(this.context.currentTime + 0.02, this.nextTime);
     source.start(start);
     this.nextTime = start + buffer.duration;
-    this.sources.add(source);
+    this.sources.set(source, start);
     source.onended = () => this.sources.delete(source);
   }
 
   interrupt() {
-    this.sources.forEach((s) => {
-      try { s.stop(); } catch { /* already stopped */ }
+    // Stop only audio that hasn't started yet; already-playing audio finishes its sentence.
+    const now = this.context.currentTime;
+    let latest = 0;
+    for (const started of this.sources.values()) latest = Math.max(latest, started);
+    this.sources.forEach((started, source) => {
+      if (started > now) {
+        try { source.stop(); } catch { /* already stopped */ }
+      }
     });
     this.sources.clear();
-    this.nextTime = 0;
+    this.nextTime = Math.max(now + 0.02, latest);
   }
 
   close() {
