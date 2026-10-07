@@ -73,7 +73,7 @@ export function CallStudio({ initialStudentId }: { initialStudentId?: string | n
           <p className="eyebrow">Calls & AI</p>
           <h1 className="page-title mt-2">Call Studio</h1>
           <p className="page-sub">
-            Every call gets its own meeting room and recording. Transcripts stream in live and REV writes the summary,
+            Every call gets its own meeting room and recording. Transcripts stream in live and Atlas writes the summary,
             action items, and homework while you talk.
           </p>
         </div>

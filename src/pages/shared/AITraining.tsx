@@ -25,7 +25,7 @@ interface Line {
 
 function instructions(audience: 'coach' | 'student') {
   return [
-    'You are the REV University AI training coach, speaking out loud in a live voice session.',
+    'You are Atlas, the REV University AI training coach, speaking out loud in a live voice session.',
     audience === 'coach'
       ? 'You are training a REV coach on how to deliver better coaching sessions, keep clients accountable, and run the program.'
       : 'You are training a REV University member who is growing a service business.',
@@ -105,7 +105,7 @@ export function AITraining({ audience }: { audience: 'coach' | 'student' }) {
         true,
       );
     } catch {
-      setMicError('Microphone access is needed to talk with the AI coach. Allow it in your browser and try again.');
+      setMicError('Microphone access is needed to talk with Atlas. Allow it in your browser and try again.');
     }
   };
 
@@ -119,8 +119,8 @@ export function AITraining({ audience }: { audience: 'coach' | 'student' }) {
         <p className="eyebrow">{audience === 'coach' ? 'Calls & AI' : 'AI tools'}</p>
         <h1 className="page-title mt-2">AI Training</h1>
         <p className="page-sub">
-          A voice coach that talks you through REV methods out loud. Pick a topic or just start talking, and interrupt
-          at any time with a question.
+          Meet Atlas, your REV voice coach. Atlas talks you through REV methods out loud. Pick a topic or just start
+          talking, and interrupt at any time with a question.
         </p>
       </div>
 
@@ -130,7 +130,7 @@ export function AITraining({ audience }: { audience: 'coach' | 'student' }) {
             <div className="flex items-center gap-3">
               <span className={`h-2.5 w-2.5 rounded-full ${live ? 'bg-emerald-500' : 'bg-ink-300'}`} />
               <span className="text-sm font-semibold text-ink-950">
-                {live ? (speaking ? 'Coach is speaking' : 'Listening') : rt.status === 'connecting' ? 'Connecting…' : 'Not connected'}
+                {live ? (speaking ? 'Atlas is speaking' : 'Atlas is listening') : rt.status === 'connecting' ? 'Connecting to Atlas…' : 'Not connected'}
               </span>
             </div>
             <LevelMeter level={rt.level} active={live} />
@@ -142,7 +142,7 @@ export function AITraining({ audience }: { audience: 'coach' | 'student' }) {
                 </button>
               ) : (
                 <button onClick={() => void connect()} className="btn-primary">
-                  <Mic className="h-4 w-4" /> Start talking
+                  <Mic className="h-4 w-4" /> Talk to Atlas
                 </button>
               )}
             </div>
@@ -164,7 +164,7 @@ export function AITraining({ audience }: { audience: 'coach' | 'student' }) {
               lines.map((l) => (
                 <div key={l.id} className={`flex animate-fade-in ${l.role === 'you' ? 'justify-end' : ''}`}>
                   <div className={`max-w-[85%] ${l.role === 'you' ? 'text-right' : ''}`}>
-                    <p className="eyebrow mb-1">{l.role === 'you' ? 'You' : 'REV coach'}</p>
+                    <p className="eyebrow mb-1">{l.role === 'you' ? 'You' : 'Atlas'}</p>
                     <p
                       className={`inline-block rounded-xl px-4 py-2.5 text-left text-sm leading-relaxed ${
                         l.role === 'you' ? 'bg-ink-950 text-white' : 'border border-ink-200 bg-ink-50 text-ink-900'
@@ -204,7 +204,7 @@ export function AITraining({ audience }: { audience: 'coach' | 'student' }) {
         <aside className="space-y-6">
           <div className="card p-5">
             <p className="text-sm font-semibold text-ink-950">Training topics</p>
-            <p className="mt-1 text-sm text-ink-500">The coach starts explaining as soon as you pick one.</p>
+            <p className="mt-1 text-sm text-ink-500">Atlas starts explaining as soon as you pick one.</p>
             <div className="mt-4 space-y-2">
               {TOPICS.map((t) => (
                 <button
@@ -219,13 +219,13 @@ export function AITraining({ audience }: { audience: 'coach' | 'student' }) {
             </div>
           </div>
           <div className="card p-5">
-            <label className="label" htmlFor="voice">Coach voice</label>
+            <label className="label" htmlFor="voice">Atlas voice</label>
             <select id="voice" className="field" value={voice} disabled={live || busy} onChange={(e) => setVoice(e.target.value)}>
               {VOICES.map((v) => (
                 <option key={v}>{v}</option>
               ))}
             </select>
-            <p className="mt-2 text-xs text-ink-500">Use headphones so the coach doesn't hear itself.</p>
+            <p className="mt-2 text-xs text-ink-500">Use headphones so Atlas doesn't hear itself.</p>
           </div>
         </aside>
       </div>

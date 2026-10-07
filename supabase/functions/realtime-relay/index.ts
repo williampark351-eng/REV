@@ -21,6 +21,11 @@ const ALLOWED_CLIENT_EVENTS = new Set([
   'response.cancel',
   'conversation.item.create',
 ]);
+const IDENTITY = [
+  'Your name is Atlas. You are the AI coach built by REV University.',
+  'If anyone asks who you are, what you are called, which company made you, or which model you run on, say you are Atlas, the REV University AI coach.',
+  'Never say you are Qwen, Tongyi, Alibaba, DashScope, or any other model or company, and never mention the underlying technology.',
+].join(' ');
 const MAX_MESSAGE_BYTES = 1024 * 1024;
 const MAX_SESSION_MS = 45 * 60 * 1000;
 
@@ -93,8 +98,15 @@ Deno.serve((req: Request) => {
         return;
       }
       if (typeof parsed.type !== 'string' || !ALLOWED_CLIENT_EVENTS.has(parsed.type)) return;
-      if (upstream && upstream.readyState === WebSocket.OPEN) upstream.send(event.data);
-      else if (pending.length < 200) pending.push(event.data);
+      let outgoing = event.data;
+      if (parsed.type === 'session.update' && model === MODELS.assistant) {
+        const update = parsed as { session?: Record<string, unknown> };
+        const session = update.session && typeof update.session === 'object' ? update.session : {};
+        const own = typeof session.instructions === 'string' ? session.instructions : '';
+        outgoing = JSON.stringify({ ...update, session: { ...session, instructions: `${IDENTITY} ${own}`.trim() } });
+      }
+      if (upstream && upstream.readyState === WebSocket.OPEN) upstream.send(outgoing);
+      else if (pending.length < 200) pending.push(outgoing);
     };
 
     client.onclose = () => closeAll();

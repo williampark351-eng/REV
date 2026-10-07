@@ -34,10 +34,10 @@ export async function draftCall(transcript: string, context: string): Promise<Ca
   const { data, error } = await supabase.functions.invoke('call-drafts', { body: { transcript, context } });
   if (error) {
     const detail = await error.context?.json?.().catch(() => null);
-    throw new Error(detail?.error ?? 'The AI drafting service is unavailable right now.');
+    throw new Error(detail?.error ?? 'Atlas could not draft notes right now.');
   }
   if (!data || typeof data.summary !== 'string' || !Array.isArray(data.action_items)) {
-    throw new Error('The AI returned an incomplete draft.');
+    throw new Error('Atlas returned an incomplete draft.');
   }
   return data as CallDrafts;
 }

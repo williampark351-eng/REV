@@ -117,8 +117,8 @@ export function LiveTranslate({ audience }: { audience: 'coach' | 'student' }) {
         <p className="eyebrow">{audience === 'coach' ? 'Calls & AI' : 'AI tools'}</p>
         <h1 className="page-title mt-2">Live Translate</h1>
         <p className="page-sub">
-          Speak in any language and see it translated as you talk. Include the meeting tab to translate a client on a
-          call, and optionally hear the translation spoken aloud.
+          Speak in any language and Atlas translates as you talk. Include the meeting tab to translate a client on a
+          call, and optionally hear Atlas speak the translation aloud.
         </p>
       </div>
 

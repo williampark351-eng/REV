@@ -58,7 +58,7 @@ export function useRealtime(mode: RealtimeMode, onEvent: (event: RealtimeEvent) 
         teardown();
       };
       connectTimerRef.current = window.setTimeout(
-        () => fail('The live AI service took too long to respond. Please try again.'),
+        () => fail('Atlas took too long to respond. Please try again.'),
         15000,
       );
 
@@ -93,13 +93,13 @@ export function useRealtime(mode: RealtimeMode, onEvent: (event: RealtimeEvent) 
         if (event.type === 'relay.error') return fail(String(event.message ?? 'The live session stopped.'));
         if (event.type === 'error') {
           const detail = (event.error as { message?: string } | undefined)?.message;
-          return fail(detail ? `The AI service reported: ${detail}` : 'The AI service reported an error.');
+          return fail(detail ? `Atlas ran into a problem: ${detail}` : 'Atlas ran into a problem. Please try again.');
         }
         if (event.type === 'response.audio.delta' && typeof event.delta === 'string') playerRef.current?.play(event.delta);
         if (event.type === 'input_audio_buffer.speech_started' && mode === 'assistant') playerRef.current?.interrupt();
         handlerRef.current(event);
       };
-      socket.onerror = () => fail('Could not connect to the live AI service.');
+      socket.onerror = () => fail('Could not connect to Atlas.');
       socket.onclose = () => {
         if (socketRef.current !== socket) return;
         if (endingRef.current) {

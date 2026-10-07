@@ -227,7 +227,7 @@ export function LiveSession({ call, student, onDone }: Props) {
       <div className="card flex flex-col overflow-hidden xl:sticky xl:top-20 xl:max-h-[calc(100vh-7rem)]">
         <div className="flex items-center gap-2 border-b border-ink-200 px-5 py-4">
           <Sparkles className="h-4 w-4 text-brand-600" />
-          <h2 className="text-sm font-semibold text-ink-950">AI first drafts</h2>
+          <h2 className="text-sm font-semibold text-ink-950">Atlas first drafts</h2>
           <button
             onClick={() => runDraft(transcript)}
             disabled={!transcript || drafting}
